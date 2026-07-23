@@ -1,0 +1,22 @@
+# Secrets — never bake into the image
+.env
+.env.*
+!.env.example
+
+# Node / Next build artifacts (rebuilt inside the image)
+node_modules/
+.next/
+out/
+
+# VCS / IDE / OS
+.git/
+.gitignore
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Misc
+*.log
+npm-debug.log*
+README.md

@@ -1,0 +1,81 @@
+version: "3.9"
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: myscheme-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: myscheme
+      POSTGRES_PASSWORD: myscheme_dev
+      POSTGRES_DB: myscheme
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U myscheme"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: myscheme-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://myscheme:myscheme_dev@db:5432/myscheme
+      INDICTRANS_URL: http://indictrans:7860
+      CORS_ORIGINS: '["http://localhost:3000"]'
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # NEXT_PUBLIC_* must be set at BUILD time (Next.js inlines it into the bundle).
+        NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
+    container_name: myscheme-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+  indictrans:
+    build:
+      context: ./indictrans
+      dockerfile: Dockerfile
+      network: host
+    container_name: myscheme-indictrans
+    restart: unless-stopped
+    ports:
+      - "7860:7860"
+    environment:
+      INDICTRANS_LORA_ADAPTER_PATH: /app/adapters/ml_govscheme
+      # HF token supplied at runtime (never baked into the image); model downloads to the mounted volume.
+      HF_TOKEN: ${HF_TOKEN:-}
+      HUGGING_FACE_HUB_TOKEN: ${HF_TOKEN:-}
+    volumes:
+      - indictrans_models:/app/models
+      - ./indictrans/adapters:/app/adapters
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+volumes:
+  pgdata:
+  indictrans_models:

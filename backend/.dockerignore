@@ -1,0 +1,29 @@
+# Secrets — never bake into the image
+.env
+.env.*
+!.env.example
+
+# Python
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Tests & caches
+.pytest_cache/
+tests/
+.coverage
+htmlcov/
+
+# Local dev artifacts
+*.log
+eval_results/
+
+# VCS / IDE / OS
+.git/
+.gitignore
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
