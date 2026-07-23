@@ -175,3 +175,5 @@ Released under the [MIT License](LICENSE).
 ---
 
 <sub>Built as a full-stack + applied-ML project demonstrating hybrid retrieval, multilingual NLP, and production-style service orchestration.</sub>
+
+---
